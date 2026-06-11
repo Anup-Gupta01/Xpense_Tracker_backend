@@ -14,10 +14,19 @@ const { errorHandler } = require('./middleware/errorHandler');
 const app = express();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  'https://xpense-tracker-frontend.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.CLIENT_ORIGIN
-    : ['http://localhost:5173', 'http://localhost:3000'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (Postman, mobile apps, curl)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
 }));
 app.use(express.json());
